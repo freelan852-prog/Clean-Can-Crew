@@ -6,6 +6,7 @@ export interface ServiceItem {
   enabled: boolean;
   isMarquee?: boolean;
   features: string[];
+  imageUrl: string;
 }
 
 export interface BenefitItem {
@@ -28,7 +29,8 @@ export interface GalleryItem {
   beforeDescription?: string;
   afterDescription?: string;
   aspectRatio: string;
-  svgSceneType: 'trash-can-sanitization' | 'kitchen-gleam' | 'bathroom-sparkle' | 'living-room-tidy' | 'deck-patio' | 'office-clean';
+  imageUrl: string;
+  beforeImageUrl?: string;
 }
 
 export interface FAQItem {
@@ -79,16 +81,16 @@ export const businessConfig: BusinessConfig = {
   businessName: 'Clean Can Crew',
   secondaryBrandName: 'Cleaning Service 619',
   tagline: 'A Cleaner Space. A Better Day.',
-  headline: 'A Cleaner Space. A Better Feeling.',
+  headline: 'Your Cans Deserve a Deeper Clean.',
   subheadline:
-    'Professional cleaning and trash can sanitization for spaces that deserve extra care. Tell us what you need, and let’s find the right solution for your home or property.',
+    'Professional trash can sanitization and property cleaning to help keep your space looking fresh, clean, and cared for.',
   logoUrl: '/assets/aistudio/image_bd8a3bd5.png',
-  instagramUrl: 'https://www.instagram.com/cleaningservice619/',
+  instagramUrl: 'https://www.instagram.com/cleaningservice619?dlrf=MXhvcWt3ZnM0eDhqbw==',
   instagramHandle: '@cleaningservice619',
 
-  // Configurable contact fields: Leave empty until supplied by business owner
-  phone: '',
-  whatsappNumber: '',
+  // Configurable contact fields: Synced with WhatsApp order provider
+  phone: '(708) 619-0619',
+  whatsappNumber: '17086190619',
   email: '',
   address: 'Burbank, IL',
   serviceArea: 'Burbank, IL & Surrounding Neighborhoods',
@@ -103,7 +105,7 @@ export const businessConfig: BusinessConfig = {
   bookingUrl: '',
   formSubmissionEndpoint: '', // Set your Formspree/custom endpoint here e.g., 'https://formspree.io/f/xyz'
 
-  ctaLabel: 'Get a Free Quote',
+  ctaLabel: 'Get a Quote',
   ctaSupportingCopy: 'Quick response · Clear communication · Tailored to your property',
   heroBadgeText: 'Professional Cleaning & Trash Can Sanitization',
 
@@ -116,11 +118,13 @@ export const businessConfig: BusinessConfig = {
       icon: 'Trash2',
       enabled: true,
       isMarquee: true,
+      imageUrl:
+        'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=900&q=80',
       features: [
-        'High-pressure hot wash',
+        'High-pressure hot wash system',
         'Hospital-grade eco sanitization',
-        'Odor neutralization',
-        'Exterior & rim detailing',
+        'Odor neutralization & deodorizing',
+        'Exterior, wheels & rim detailing',
       ],
     },
     {
@@ -130,25 +134,29 @@ export const businessConfig: BusinessConfig = {
         'Thoughtful routine cleaning designed for busy homeowners who value a fresh, organized, and truly clean living environment.',
       icon: 'Home',
       enabled: true,
+      imageUrl:
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80',
       features: [
         'Living spaces & bedrooms',
-        'Kitchen surfaces & appliances',
-        'Bathroom sanitization',
-        'Dusting & floor care',
+        'Kitchen surfaces & appliance exteriors',
+        'Bathroom disinfection & polishing',
+        'Hard surface floor washing',
       ],
     },
     {
       id: 'deep-cleaning',
       title: 'Deep Cleaning',
       description:
-        'An exhaustive, top-to-bottom scrub addressing overlooked corners, baseboards, tile grout, and built-up buildup.',
+        'An exhaustive, top-to-bottom scrub addressing overlooked corners, baseboards, tile grout, and built-up residue.',
       icon: 'Sparkles',
       enabled: true,
+      imageUrl:
+        'https://images.unsplash.com/photo-1585421514738-01798e348b17?auto=format&fit=crop&w=900&q=80',
       features: [
-        'Baseboards & door frames',
+        'Baseboards & door frames detailing',
         'Under & behind accessible furniture',
-        'Grout & fixture descaling',
-        'Cabinet exteriors & interior spot clean',
+        'Tile grout & fixture descaling',
+        'Intensive appliance spot cleaning',
       ],
     },
     {
@@ -158,11 +166,13 @@ export const businessConfig: BusinessConfig = {
         'Comprehensive turnover cleaning to ensure properties are sparkling clean for new occupants, inspections, or lease handovers.',
       icon: 'Key',
       enabled: true,
+      imageUrl:
+        'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=900&q=80',
       features: [
-        'Empty home thorough scrub',
-        'Inside drawers & cabinets',
-        'Oven & refrigerator cleaning',
-        'Complete move-ready presentation',
+        'Complete empty home sanitization',
+        'Inside all drawers & cabinetry',
+        'Oven, fridge & fixture detailing',
+        'Inspection-ready presentation',
       ],
     },
     {
@@ -172,11 +182,13 @@ export const businessConfig: BusinessConfig = {
         'Reliable upkeep for small offices, communal spaces, retail fronts, and outdoor waste collection areas.',
       icon: 'Building2',
       enabled: true,
+      imageUrl:
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=900&q=80',
       features: [
         'Workstation & lobby upkeep',
-        'Waste bin sanitation',
-        'Restroom disinfection',
-        'Floor washing & vacuuming',
+        'Waste bin sanitation & recycling areas',
+        'Commercial restroom disinfection',
+        'High-traffic floor maintenance',
       ],
     },
     {
@@ -186,10 +198,12 @@ export const businessConfig: BusinessConfig = {
         'Detailed dust mitigation, residue removal, and fine surface polishing following renovations and contractor work.',
       icon: 'Hammer',
       enabled: false, // Disabled by default until owner confirms
+      imageUrl:
+        'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=900&q=80',
       features: [
         'Fine dry-wall dust removal',
-        'Window sticker & residue scraping',
-        'Floor decontamination',
+        'Paint & sticker residue scraping',
+        'Deep floor decontamination',
         'Air vent & register wipe-down',
       ],
     },
@@ -277,57 +291,75 @@ export const businessConfig: BusinessConfig = {
   gallery: [
     {
       id: 'g1',
-      title: 'Curbside Trash Can Wash & Sanitization',
+      title: 'Curbside Trash Can High-Pressure Sanitization',
       category: 'Trash Can Sanitization',
-      beforeDescription: 'Heavily soiled, odor-emitting outdoor waste bin with persistent residue',
-      afterDescription: 'Fully degreased, disinfected, deodorized, and shining like new',
+      beforeDescription: 'Heavily soiled, odor-emitting outdoor waste bin with persistent grease and bacteria',
+      afterDescription: 'Fully degreased, disinfected at high temperature, deodorized, and spotless',
       aspectRatio: '4:3',
-      svgSceneType: 'trash-can-sanitization',
+      imageUrl:
+        'https://images.unsplash.com/photo-1584820927498-cfe5211fd8bf?auto=format&fit=crop&w=900&q=80',
+      beforeImageUrl:
+        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=900&q=80',
     },
     {
       id: 'g2',
       title: 'Kitchen Countertop & Cooktop Restoration',
       category: 'Residential Cleaning',
-      beforeDescription: 'Grease splatter, water spots, and dull granite finish',
-      afterDescription: 'Polished surfaces, grease-free stovetop, and streakless shine',
+      beforeDescription: 'Grease splatter, water spots, and dull kitchen surface finish',
+      afterDescription: 'Polished countertops, grease-free stovetop, and streakless hygienic shine',
       aspectRatio: '4:3',
-      svgSceneType: 'kitchen-gleam',
+      imageUrl:
+        'https://images.unsplash.com/photo-1556911220-e15b29be8c8f?auto=format&fit=crop&w=900&q=80',
+      beforeImageUrl:
+        'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=900&q=80',
     },
     {
       id: 'g3',
-      title: 'Bathroom Grout & Fixture Descaling',
+      title: 'Bathroom Grout & Chrome Fixture Descaling',
       category: 'Deep Cleaning',
-      beforeDescription: 'Hard water scale on chrome faucets and tiled shower surround',
-      afterDescription: 'Sparkling descaled fixtures with clean grout lines',
+      beforeDescription: 'Hard water scale on chrome faucets, soap scum, and discolored tiled surround',
+      afterDescription: 'Sparkling descaled fixtures, brightened grout lines, and disinfected surfaces',
       aspectRatio: '4:3',
-      svgSceneType: 'bathroom-sparkle',
+      imageUrl:
+        'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&w=900&q=80',
+      beforeImageUrl:
+        'https://images.unsplash.com/photo-1563453392212-326f5e854473?auto=format&fit=crop&w=900&q=80',
     },
     {
       id: 'g4',
-      title: 'Living Room Reset & Hardwood Care',
+      title: 'Living Room Reset & Hardwood Floor Care',
       category: 'Residential Cleaning',
-      beforeDescription: 'Dust film, scattered clutter, and high-traffic floor scuffs',
-      afterDescription: 'Airy, organized space with conditioned hardwood floors',
+      beforeDescription: 'Dust film, scattered clutter, and high-traffic floor scuffs and smudges',
+      afterDescription: 'Airy, organized space with conditioned hardwood floors and purified air',
       aspectRatio: '4:3',
-      svgSceneType: 'living-room-tidy',
+      imageUrl:
+        'https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=900&q=80',
+      beforeImageUrl:
+        'https://images.unsplash.com/photo-1581578731548-c64695cc6952?auto=format&fit=crop&w=900&q=80',
     },
     {
       id: 'g5',
-      title: 'Exterior Entryway & Bin Storage Area',
-      category: 'Commercial & Exterior',
-      beforeDescription: 'Organic grime, driveway stains, and bin storage residue',
-      afterDescription: 'Pressure-cleansed concrete path and deodorized storage pad',
+      title: 'Exterior Entryway & Driveway Concrete Wash',
+      category: 'Property Cleaning',
+      beforeDescription: 'Organic grime, tire marks, driveway stains, and bin storage residue',
+      afterDescription: 'High-pressure washed concrete path, stain-free driveway, and deodorized pad',
       aspectRatio: '4:3',
-      svgSceneType: 'deck-patio',
+      imageUrl:
+        'https://images.unsplash.com/photo-1517646287270-a5a9ca602e5c?auto=format&fit=crop&w=900&q=80',
+      beforeImageUrl:
+        'https://images.unsplash.com/photo-1590674899484-d5640e854abe?auto=format&fit=crop&w=900&q=80',
     },
     {
       id: 'g6',
-      title: 'Office Breakroom & Common Area',
+      title: 'Commercial Office Space & Common Facility',
       category: 'Commercial Cleaning',
-      beforeDescription: 'Shared microwave residue, full receptacles, and sticky tables',
-      afterDescription: 'Sanitized food prep station, emptied and deodorized receptacles',
+      beforeDescription: 'High-traffic surface smudges, full waste receptacles, and dusty workstations',
+      afterDescription: 'Sanitized work environment, disinfected trash stations, and polished flooring',
       aspectRatio: '4:3',
-      svgSceneType: 'office-clean',
+      imageUrl:
+        'https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=900&q=80',
+      beforeImageUrl:
+        'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=900&q=80',
     },
   ],
 

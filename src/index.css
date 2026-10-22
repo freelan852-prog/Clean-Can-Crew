@@ -3,14 +3,67 @@
 @theme {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
-  --color-navy: #14344A;
-  --color-teal: #20A39E;
-  --color-offwhite: #F7F9FA;
+  --color-midnight: #102A43;
+  --color-deepblue: #163B5C;
+  --color-teal: #0FB9B1;
+  --color-teal-dark: #0B9690;
+  --color-mint: #DDF7EF;
+  --color-ivory: #F7F8F4;
+  --color-lime: #D4F36A;
   --color-charcoal: #263238;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
   font-family: var(--font-sans);
   color: #263238;
-  background-color: #ffffff;
+  background-color: #F7F8F4;
+  touch-action: manipulation;
+}
+
+/* iOS Safari form zoom prevention fallback */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Subtle image zoom on card hover */
+.img-zoom {
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.group:hover .img-zoom {
+  transform: scale(1.04);
+}
+
+/* Mobile-friendly custom slider thumb */
+input[type=range]::-webkit-slider-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0FB9B1;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+input[type=range]::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0FB9B1;
+  cursor: pointer;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }

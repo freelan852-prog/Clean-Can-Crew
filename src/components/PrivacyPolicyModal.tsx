@@ -18,23 +18,23 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-title"
-      className="fixed inset-0 z-50 bg-black/75 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150"
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6 animate-in fade-in duration-150"
     >
-      <div className="bg-white rounded-2xl max-w-2xl w-full border border-[#E5E9EC] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+      <div className="bg-white rounded-3xl max-w-2xl w-full border border-[#E5E9EC] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
         {/* Header */}
-        <div className="px-6 py-5 border-b border-[#E5E9EC] flex items-center justify-between bg-[#F7F9FA]">
+        <div className="px-6 py-5 border-b border-[#E5E9EC] flex items-center justify-between bg-[#F7F8F4]">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-md bg-white border border-[#E5E9EC] text-[#20A39E]">
-              <Shield className="w-4 h-4" />
+            <div className="p-2 rounded-xl bg-white border border-[#E5E9EC] text-[#0FB9B1] shadow-2xs">
+              <Shield className="w-5 h-5" />
             </div>
-            <h3 id="privacy-title" className="text-lg font-bold text-[#14344A]">
+            <h3 id="privacy-title" className="text-lg font-bold text-[#102A43]">
               Privacy & Enquiry Notice
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md transition-colors cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg transition-colors cursor-pointer"
             aria-label="Close privacy notice"
           >
             <X className="w-5 h-5" />
@@ -50,7 +50,7 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
             This privacy notice describes how <strong>{businessConfig.businessName}</strong> handles the personal information you submit through our quote enquiry forms.
           </p>
 
-          <h4 className="font-bold text-[#14344A] text-base pt-2">
+          <h4 className="font-bold text-[#102A43] text-base pt-2">
             1. What Information We Collect
           </h4>
           <p>
@@ -64,21 +64,21 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
             <li>Requested cleaning services and any specific notes</li>
           </ul>
 
-          <h4 className="font-bold text-[#14344A] text-base pt-2">
+          <h4 className="font-bold text-[#102A43] text-base pt-2">
             2. How We Use Your Information
           </h4>
           <p>
             Your information is used solely to respond to your enquiry, provide price estimates, schedule appointments, and coordinate cleaning services. We do not sell, rent, or trade your contact information to third parties or marketing lists.
           </p>
 
-          <h4 className="font-bold text-[#14344A] text-base pt-2">
+          <h4 className="font-bold text-[#102A43] text-base pt-2">
             3. Data Retention & Security
           </h4>
           <p>
             We take reasonable precautions to safeguard your contact details. If you wish to have your contact details updated or removed from our enquiry records, contact us directly via our Instagram page ({businessConfig.instagramHandle}) or through our contact form.
           </p>
 
-          <h4 className="font-bold text-[#14344A] text-base pt-2">
+          <h4 className="font-bold text-[#102A43] text-base pt-2">
             4. Business Owner Customization
           </h4>
           <p>
@@ -87,11 +87,11 @@ export const PrivacyPolicyModal: React.FC<PrivacyPolicyModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-[#F7F9FA] border-t border-[#E5E9EC] flex justify-end">
+        <div className="px-6 py-4 bg-[#F7F8F4] border-t border-[#E5E9EC] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-5 py-2 text-xs font-bold text-white bg-[#14344A] hover:bg-[#1E4560] rounded-lg transition-colors cursor-pointer"
+            className="px-6 py-2.5 text-xs font-bold text-white bg-[#102A43] hover:bg-[#163B5C] rounded-xl transition-colors cursor-pointer"
           >
             I Understand
           </button>

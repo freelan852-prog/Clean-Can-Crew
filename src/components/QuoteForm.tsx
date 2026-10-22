@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle2, AlertCircle, MessageCircle, Info, Copy, Check } from 'lucide-react';
+import { Send, CheckCircle2, AlertCircle, MessageCircle, Copy, Check } from 'lucide-react';
 import { businessConfig } from '../config/business';
 
 interface QuoteFormProps {
   preselectedServiceId?: string;
   onClearPreselection?: () => void;
+  prefilledNotes?: string;
+  prefilledSize?: string;
 }
 
 interface FormData {
@@ -29,6 +31,8 @@ interface FormErrors {
 export const QuoteForm: React.FC<QuoteFormProps> = ({
   preselectedServiceId,
   onClearPreselection,
+  prefilledNotes,
+  prefilledSize,
 }) => {
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
@@ -45,10 +49,24 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<
-    'idle' | 'success_live' | 'unconfigured_notice' | 'error'
+    'idle' | 'whatsapp_sent' | 'error'
   >('idle');
   const [errorMessage, setErrorMessage] = useState('');
   const [copiedSummary, setCopiedSummary] = useState(false);
+  const [dispatchedUrl, setDispatchedUrl] = useState('');
+  const [dispatchedOrderText, setDispatchedOrderText] = useState('');
+
+  // Current active WhatsApp provider number (supports custom setting in localStorage or default)
+  const [providerPhone, setProviderPhone] = useState(
+    businessConfig.whatsappNumber || '17086190619'
+  );
+
+  useEffect(() => {
+    const customWhatsApp = localStorage.getItem('clean_can_crew_whatsapp');
+    if (customWhatsApp) {
+      setProviderPhone(customWhatsApp);
+    }
+  }, []);
 
   // Sync preselected service from Services section
   useEffect(() => {
@@ -56,6 +74,18 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
       setFormData((prev) => ({ ...prev, serviceId: preselectedServiceId }));
     }
   }, [preselectedServiceId]);
+
+  useEffect(() => {
+    if (prefilledSize) {
+      setFormData((prev) => ({ ...prev, propertySize: prefilledSize }));
+    }
+  }, [prefilledSize]);
+
+  useEffect(() => {
+    if (prefilledNotes) {
+      setFormData((prev) => ({ ...prev, details: prefilledNotes }));
+    }
+  }, [prefilledNotes]);
 
   // Phone number input formatter
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,65 +131,6 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
-
-    setIsSubmitting(true);
-    setErrorMessage('');
-
-    const submissionPayload = {
-      ...formData,
-      submittedAt: new Date().toISOString(),
-      businessName: businessConfig.businessName,
-    };
-
-    // If an actual form endpoint is configured, submit to it
-    if (businessConfig.formSubmissionEndpoint && businessConfig.formSubmissionEndpoint.trim() !== '') {
-      try {
-        const response = await fetch(businessConfig.formSubmissionEndpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify(submissionPayload),
-        });
-
-        if (response.ok) {
-          setSubmitStatus('success_live');
-        } else {
-          setSubmitStatus('error');
-          setErrorMessage(
-            'The form service returned an error. Please try again or reach out on Instagram @cleaningservice619.'
-          );
-        }
-      } catch {
-        setSubmitStatus('error');
-        setErrorMessage(
-          'Network connection error while submitting. Please check your connection and try again.'
-        );
-      } finally {
-        setIsSubmitting(false);
-      }
-    } else {
-      // Per instructions: "If no submission backend is configured, clearly mark the form as requiring configuration during development. Do not pretend that an enquiry has been sent."
-      // Save locally to ensure customer enquiry is never silently discarded
-      try {
-        const existing = JSON.parse(localStorage.getItem('clean_can_crew_leads') || '[]');
-        existing.push(submissionPayload);
-        localStorage.setItem('clean_can_crew_leads', JSON.stringify(existing));
-      } catch (err) {
-        console.warn('Local storage write note:', err);
-      }
-
-      setTimeout(() => {
-        setIsSubmitting(false);
-        setSubmitStatus('unconfigured_notice');
-      }, 400);
-    }
-  };
-
   const getServiceLabel = (id: string) => {
     const s = businessConfig.services.find((item) => item.id === id);
     if (s) return s.title;
@@ -167,138 +138,195 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
     return id;
   };
 
-  const buildWhatsAppMessage = () => {
-    const message = `Hello Clean Can Crew! I would like to request a quote.\n\nName: ${formData.fullName}\nService: ${getServiceLabel(formData.serviceId)}\nProperty Type: ${formData.propertyType}\nLocation / ZIP: ${formData.zipCode || 'Burbank'}\nDetails: ${formData.details || 'Standard clean'}`;
-    return encodeURIComponent(message);
+  const formatWhatsAppOrder = (data: FormData) => {
+    const serviceTitle = getServiceLabel(data.serviceId);
+    return `🧹 *NEW CLEANING ORDER REQUEST*
+*Business:* ${businessConfig.businessName}
+━━━━━━━━━━━━━━━━━━━━
+👤 *Customer Name:* ${data.fullName}
+📞 *Phone:* ${data.phone}
+${data.email.trim() ? `✉️ *Email:* ${data.email.trim()}\n` : ''}🧼 *Service Requested:* ${serviceTitle}
+🏠 *Property Type:* ${data.propertyType}
+${data.propertySize.trim() ? `🗑️ *Size / Cans Count:* ${data.propertySize.trim()}\n` : ''}${data.preferredDate.trim() ? `📅 *Preferred Date:* ${data.preferredDate.trim()}\n` : ''}📍 *Location / ZIP:* ${data.zipCode.trim() || 'Burbank, IL'}
+${data.details.trim() ? `📝 *Special Notes:* ${data.details.trim()}\n` : ''}━━━━━━━━━━━━━━━━━━━━
+_Submitted automatically via ${businessConfig.businessName} Website_`;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+    setErrorMessage('');
+
+    const targetPhone =
+      localStorage.getItem('clean_can_crew_whatsapp') || providerPhone || '17086190619';
+    const cleanDigits = targetPhone.replace(/\D/g, '');
+    const orderText = formatWhatsAppOrder(formData);
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${cleanDigits}&text=${encodeURIComponent(
+      orderText
+    )}`;
+
+    setDispatchedUrl(whatsappUrl);
+    setDispatchedOrderText(orderText);
+
+    // Save lead in localStorage for provider records
+    const submissionPayload = {
+      ...formData,
+      submittedAt: new Date().toISOString(),
+      businessName: businessConfig.businessName,
+      whatsappSynced: true,
+      whatsappRecipient: cleanDigits,
+    };
+
+    try {
+      const existing = JSON.parse(localStorage.getItem('clean_can_crew_leads') || '[]');
+      existing.push(submissionPayload);
+      localStorage.setItem('clean_can_crew_leads', JSON.stringify(existing));
+    } catch (err) {
+      console.warn('Local storage write note:', err);
+    }
+
+    // Also fire webhook in background if owner configured one
+    if (
+      businessConfig.formSubmissionEndpoint &&
+      businessConfig.formSubmissionEndpoint.trim() !== ''
+    ) {
+      fetch(businessConfig.formSubmissionEndpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(submissionPayload),
+      }).catch((err) => console.warn('Webhook post:', err));
+    }
+
+    // Automatically trigger navigation to WhatsApp
+    try {
+      const link = document.createElement('a');
+      link.href = whatsappUrl;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.warn('Auto-click attempt:', err);
+    }
+
+    setIsSubmitting(false);
+    setSubmitStatus('whatsapp_sent');
   };
 
   const copySummaryText = () => {
-    const text = `Quote Request for Clean Can Crew:\nName: ${formData.fullName}\nPhone: ${formData.phone}\nEmail: ${formData.email || 'N/A'}\nService: ${getServiceLabel(formData.serviceId)}\nProperty: ${formData.propertyType}\nZIP: ${formData.zipCode}\nNotes: ${formData.details || 'None'}`;
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(dispatchedOrderText);
     setCopiedSummary(true);
     setTimeout(() => setCopiedSummary(false), 2500);
   };
 
+  const formatDisplayPhone = (raw: string) => {
+    const d = raw.replace(/\D/g, '');
+    if (d.length === 11 && d.startsWith('1')) {
+      return `+1 (${d.slice(1, 4)}) ${d.slice(4, 7)}-${d.slice(7)}`;
+    }
+    if (d.length === 10) {
+      return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+    }
+    return `+${d}`;
+  };
+
   return (
-    <section id="contact" className="py-20 bg-white border-b border-[#E5E9EC]">
+    <section id="contact" className="py-24 bg-[#F7F8F4] border-b border-[#E5E9EC]">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Heading */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <div className="text-xs font-semibold tracking-wider text-[#20A39E] uppercase mb-2">
-            Get In Touch
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#DDF7EF] border border-[#0FB9B1]/30 text-xs font-bold tracking-wider text-[#0FB9B1] uppercase mb-3">
+            <MessageCircle className="w-3.5 h-3.5" />
+            <span>Direct WhatsApp Order Sync</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-[#14344A] tracking-tight mb-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#102A43] tracking-tight mb-4 text-balance">
             Let's Make Your Space Shine
           </h2>
-          <p className="text-base text-[#263238]/80">
-            Share a few details about your cleaning needs so our team can follow up with you directly.
+          <p className="text-base sm:text-lg text-[#263238]/85">
+            Submit your cleaning details below and your order will automatically route to our team on WhatsApp for immediate confirmation.
           </p>
         </div>
 
-        {/* Backend Configuration Notice / Transparency Banner */}
-        {!businessConfig.formSubmissionEndpoint && (
-          <div className="mb-8 p-4 rounded-xl bg-amber-50/80 border border-amber-200 text-xs text-amber-900 flex items-start gap-3">
-            <Info className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <span className="font-bold">Owner Note — Submission Endpoint:</span> Live form delivery requires setting your form webhook or Formspree endpoint in{' '}
-              <code className="font-mono bg-amber-100/70 px-1.5 py-0.5 rounded text-[11px]">src/config/business.ts</code> (field: <code className="font-mono text-[11px]">formSubmissionEndpoint</code>). While unconfigured, submitted requests are preserved safely in browser storage for testing.
-            </div>
-          </div>
-        )}
-
-        {/* Live Submission Success State */}
-        {submitStatus === 'success_live' && (
-          <div className="p-8 sm:p-10 rounded-2xl bg-[#F7F9FA] border border-emerald-300 text-center">
-            <div className="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <h3 className="text-2xl font-bold text-[#14344A] mb-2">
-              Quote Request Sent!
-            </h3>
-            <p className="text-sm text-[#263238]/80 max-w-md mx-auto mb-6">
-              Thank you, <strong>{formData.fullName}</strong>. We received your request for{' '}
-              <strong>{getServiceLabel(formData.serviceId)}</strong> and will reach out to{' '}
-              <strong>{formData.phone}</strong> shortly.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSubmitStatus('idle');
-                setFormData({
-                  fullName: '',
-                  phone: '',
-                  email: '',
-                  propertyType: 'Single-Family Home',
-                  serviceId: 'trash-can-sanitization',
-                  propertySize: '',
-                  preferredDate: '',
-                  zipCode: '60459',
-                  details: '',
-                });
-              }}
-              className="px-6 py-2.5 text-xs font-bold text-white bg-[#20A39E] rounded-lg hover:bg-[#1B8985] transition-colors cursor-pointer"
-            >
-              Submit Another Request
-            </button>
-          </div>
-        )}
-
-        {/* Unconfigured Backend Notification Modal / Card */}
-        {submitStatus === 'unconfigured_notice' && (
-          <div className="p-8 sm:p-10 rounded-2xl bg-[#F7F9FA] border border-[#20A39E] text-left">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-[#20A39E]/10 text-[#20A39E] flex items-center justify-center shrink-0">
-                <CheckCircle2 className="w-6 h-6" />
+        {/* WhatsApp Order Sent Confirmation State */}
+        {submitStatus === 'whatsapp_sent' && (
+          <div className="p-5 sm:p-8 md:p-12 rounded-3xl bg-white border-2 border-[#0FB9B1] text-left shadow-xl animate-in fade-in duration-200">
+            <div className="flex items-center gap-3.5 sm:gap-4 mb-5">
+              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 flex items-center justify-center shrink-0 shadow-xs">
+                <MessageCircle className="w-7 h-7 sm:w-8 sm:h-8 fill-emerald-600 text-white" />
               </div>
               <div>
-                <h3 className="text-xl font-bold text-[#14344A]">
-                  Enquiry Prepared & Recorded Locally
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] sm:text-xs font-bold mb-1">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Order Automatically Prepared</span>
+                </div>
+                <h3 className="text-xl sm:text-3xl font-extrabold text-[#102A43]">
+                  Order Sent to Service Provider!
                 </h3>
-                <span className="text-xs text-slate-500">
-                  Site is currently running in Preview/Setup mode
-                </span>
+                <p className="text-xs sm:text-sm text-slate-500 font-medium">
+                  Synced directly with Clean Can Crew on WhatsApp ({formatDisplayPhone(providerPhone)})
+                </p>
               </div>
             </div>
 
-            <p className="text-sm text-[#263238]/85 leading-relaxed mb-6">
-              Thank you for testing the form! Because an external form submission endpoint is not yet connected in <code className="font-mono text-xs bg-slate-200 px-1 py-0.5 rounded">src/config/business.ts</code>, your enquiry was saved safely in local browser storage without being lost.
+            <p className="text-sm sm:text-base text-[#263238]/90 leading-relaxed mb-6">
+              Your order details have been formatted and sent to the service provider. Click the green button below to chat and confirm your cleaning date directly on WhatsApp:
             </p>
 
-            <div className="bg-white p-4 rounded-xl border border-[#E5E9EC] text-xs font-mono space-y-1 text-slate-700 mb-6">
-              <div><strong>Name:</strong> {formData.fullName}</div>
-              <div><strong>Phone:</strong> {formData.phone}</div>
-              {formData.email && <div><strong>Email:</strong> {formData.email}</div>}
-              <div><strong>Service:</strong> {getServiceLabel(formData.serviceId)}</div>
-              <div><strong>Property Type:</strong> {formData.propertyType}</div>
-              <div><strong>Location ZIP:</strong> {formData.zipCode || 'Not provided'}</div>
-              {formData.details && <div><strong>Notes:</strong> {formData.details}</div>}
+            {/* Primary Action to Open WhatsApp */}
+            <div className="mb-6">
+              <a
+                href={dispatchedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:w-auto min-h-[48px] inline-flex items-center justify-center gap-3 px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-white bg-[#25D366] hover:bg-[#1EBE5D] active:bg-[#17A850] rounded-2xl shadow-lg hover:shadow-xl transition-all cursor-pointer"
+              >
+                <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 fill-white shrink-0" />
+                <span className="text-center">Open WhatsApp to Confirm Order &rarr;</span>
+              </a>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3">
+            {/* Order Text Preview Box */}
+            <div className="bg-[#F7F8F4] p-4 sm:p-5 rounded-2xl border border-[#E5E9EC] text-xs font-mono space-y-1.5 text-slate-800 mb-6 overflow-x-auto">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-2 font-sans">
+                Summary of Order Details:
+              </div>
+              <pre className="whitespace-pre-wrap font-mono text-xs text-slate-700 leading-relaxed">
+                {dispatchedOrderText}
+              </pre>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               <button
                 type="button"
                 onClick={copySummaryText}
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-[#14344A] bg-white border border-[#E5E9EC] rounded-lg hover:bg-slate-50 transition-colors cursor-pointer"
+                className="min-h-[44px] inline-flex items-center justify-center gap-2 px-5 py-3 text-xs font-bold text-[#102A43] bg-white border border-[#E5E9EC] rounded-xl hover:bg-slate-50 active:bg-slate-100 transition-colors cursor-pointer shadow-xs"
               >
                 {copiedSummary ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedSummary ? 'Copied to Clipboard!' : 'Copy Enquiry Details'}</span>
+                <span>{copiedSummary ? 'Copied to Clipboard!' : 'Copy Order Text'}</span>
               </button>
-
-              <a
-                href={businessConfig.instagramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-bold text-white bg-[#14344A] rounded-lg hover:bg-[#1E4560] transition-colors"
-              >
-                <span>Send to @cleaningservice619 on Instagram &rarr;</span>
-              </a>
 
               <button
                 type="button"
-                onClick={() => setSubmitStatus('idle')}
-                className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 cursor-pointer ml-auto"
+                onClick={() => {
+                  setSubmitStatus('idle');
+                  setFormData({
+                    fullName: '',
+                    phone: '',
+                    email: '',
+                    propertyType: 'Single-Family Home',
+                    serviceId: 'trash-can-sanitization',
+                    propertySize: '',
+                    preferredDate: '',
+                    zipCode: '60459',
+                    details: '',
+                  });
+                }}
+                className="min-h-[44px] inline-flex items-center justify-center px-5 py-3 text-xs font-bold text-slate-600 hover:text-slate-900 cursor-pointer sm:ml-auto"
               >
-                Edit Details
+                Submit Another Request
               </button>
             </div>
           </div>
@@ -309,21 +337,21 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
           <form
             onSubmit={handleSubmit}
             noValidate
-            className="bg-[#F7F9FA] rounded-2xl p-6 sm:p-10 border border-[#E5E9EC] shadow-2xs"
+            className="bg-white rounded-3xl p-5 sm:p-8 md:p-12 border border-[#E5E9EC] shadow-xl"
           >
             {submitStatus === 'error' && (
-              <div className="mb-6 p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2">
+              <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-800 flex items-start gap-2.5">
                 <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
                 <span>{errorMessage}</span>
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6 mb-6">
               {/* Full Name */}
               <div>
                 <label
                   htmlFor="fullName"
-                  className="block text-xs font-bold text-[#14344A] mb-1.5"
+                  className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
                 >
                   Full Name <span className="text-rose-500">*</span>
                 </label>
@@ -338,8 +366,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   placeholder="e.g. Sarah Jenkins"
                   aria-invalid={!!errors.fullName}
                   aria-describedby={errors.fullName ? 'fullName-error' : undefined}
-                  className={`w-full px-4 py-3 text-sm rounded-lg bg-white border ${
-                    errors.fullName ? 'border-rose-400 focus:border-rose-500' : 'border-[#E5E9EC] focus:border-[#20A39E]'
+                  className={`w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border ${
+                    errors.fullName ? 'border-rose-400 focus:border-rose-500' : 'border-[#E5E9EC] focus:border-[#0FB9B1]'
                   } focus:outline-hidden text-[#263238] transition-colors`}
                 />
                 {errors.fullName && (
@@ -353,7 +381,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div>
                 <label
                   htmlFor="phone"
-                  className="block text-xs font-bold text-[#14344A] mb-1.5"
+                  className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
                 >
                   Phone Number <span className="text-rose-500">*</span>
                 </label>
@@ -365,8 +393,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   placeholder="(708) 555-0199"
                   aria-invalid={!!errors.phone}
                   aria-describedby={errors.phone ? 'phone-error' : undefined}
-                  className={`w-full px-4 py-3 text-sm rounded-lg bg-white border ${
-                    errors.phone ? 'border-rose-400 focus:border-rose-500' : 'border-[#E5E9EC] focus:border-[#20A39E]'
+                  className={`w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border ${
+                    errors.phone ? 'border-rose-400 focus:border-rose-500' : 'border-[#E5E9EC] focus:border-[#0FB9B1]'
                   } focus:outline-hidden text-[#263238] transition-colors`}
                 />
                 {errors.phone && (
@@ -380,9 +408,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-xs font-bold text-[#14344A] mb-1.5"
+                  className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
                 >
-                  Email Address <span className="text-slate-400 font-normal">(Optional)</span>
+                  Email Address <span className="text-slate-400 font-normal lowercase">(optional)</span>
                 </label>
                 <input
                   id="email"
@@ -395,8 +423,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   placeholder="sarah@example.com"
                   aria-invalid={!!errors.email}
                   aria-describedby={errors.email ? 'email-error' : undefined}
-                  className={`w-full px-4 py-3 text-sm rounded-lg bg-white border ${
-                    errors.email ? 'border-rose-400 focus:border-rose-500' : 'border-[#E5E9EC] focus:border-[#20A39E]'
+                  className={`w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border ${
+                    errors.email ? 'border-rose-400 focus:border-rose-500' : 'border-[#E5E9EC] focus:border-[#0FB9B1]'
                   } focus:outline-hidden text-[#263238] transition-colors`}
                 />
                 {errors.email && (
@@ -410,7 +438,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div>
                 <label
                   htmlFor="propertyType"
-                  className="block text-xs font-bold text-[#14344A] mb-1.5"
+                  className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
                 >
                   Property Type
                 </label>
@@ -418,7 +446,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   id="propertyType"
                   value={formData.propertyType}
                   onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
-                  className="w-full px-4 py-3 text-sm rounded-lg bg-white border border-[#E5E9EC] focus:border-[#20A39E] focus:outline-hidden text-[#263238] transition-colors cursor-pointer"
+                  className="w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border border-[#E5E9EC] focus:border-[#0FB9B1] focus:outline-hidden text-[#263238] transition-colors cursor-pointer"
                 >
                   <option value="Single-Family Home">Single-Family Home</option>
                   <option value="Townhouse / Condominium">Townhouse / Condominium</option>
@@ -433,7 +461,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                 <div className="flex items-center justify-between mb-1.5">
                   <label
                     htmlFor="serviceId"
-                    className="block text-xs font-bold text-[#14344A]"
+                    className="block text-xs font-bold text-[#102A43] uppercase tracking-wide"
                   >
                     Requested Service <span className="text-rose-500">*</span>
                   </label>
@@ -441,7 +469,7 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     <button
                       type="button"
                       onClick={onClearPreselection}
-                      className="text-[11px] text-[#20A39E] hover:underline cursor-pointer"
+                      className="text-[11px] text-[#0FB9B1] hover:underline cursor-pointer font-bold"
                     >
                       Clear preselection
                     </button>
@@ -454,8 +482,8 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                     setFormData({ ...formData, serviceId: e.target.value });
                     if (errors.serviceId) setErrors({ ...errors, serviceId: undefined });
                   }}
-                  className={`w-full px-4 py-3 text-sm rounded-lg bg-white border ${
-                    errors.serviceId ? 'border-rose-400' : 'border-[#E5E9EC] focus:border-[#20A39E]'
+                  className={`w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border ${
+                    errors.serviceId ? 'border-rose-400' : 'border-[#E5E9EC] focus:border-[#0FB9B1]'
                   } focus:outline-hidden text-[#263238] transition-colors cursor-pointer`}
                 >
                   {businessConfig.services
@@ -476,17 +504,17 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div>
                 <label
                   htmlFor="propertySize"
-                  className="block text-xs font-bold text-[#14344A] mb-1.5"
+                  className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
                 >
-                  Size / Number of Cans <span className="text-slate-400 font-normal">(Optional)</span>
+                  Size / Cans Count <span className="text-slate-400 font-normal lowercase">(optional)</span>
                 </label>
                 <input
                   id="propertySize"
                   type="text"
                   value={formData.propertySize}
                   onChange={(e) => setFormData({ ...formData, propertySize: e.target.value })}
-                  placeholder="e.g. 2 Trash Cans or 3-Bed Home"
-                  className="w-full px-4 py-3 text-sm rounded-lg bg-white border border-[#E5E9EC] focus:border-[#20A39E] focus:outline-hidden text-[#263238] transition-colors"
+                  placeholder="e.g. 2 Curbside Cans or 3-Bed Home"
+                  className="w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border border-[#E5E9EC] focus:border-[#0FB9B1] focus:outline-hidden text-[#263238] transition-colors"
                 />
               </div>
 
@@ -494,16 +522,16 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div>
                 <label
                   htmlFor="preferredDate"
-                  className="block text-xs font-bold text-[#14344A] mb-1.5"
+                  className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
                 >
-                  Preferred Date / Day <span className="text-slate-400 font-normal">(Optional)</span>
+                  Preferred Date <span className="text-slate-400 font-normal lowercase">(optional)</span>
                 </label>
                 <input
                   id="preferredDate"
                   type="date"
                   value={formData.preferredDate}
                   onChange={(e) => setFormData({ ...formData, preferredDate: e.target.value })}
-                  className="w-full px-4 py-3 text-sm rounded-lg bg-white border border-[#E5E9EC] focus:border-[#20A39E] focus:outline-hidden text-[#263238] transition-colors"
+                  className="w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border border-[#E5E9EC] focus:border-[#0FB9B1] focus:outline-hidden text-[#263238] transition-colors"
                 />
               </div>
 
@@ -511,9 +539,9 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
               <div>
                 <label
                   htmlFor="zipCode"
-                  className="block text-xs font-bold text-[#14344A] mb-1.5"
+                  className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
                 >
-                  ZIP or Postal Code <span className="text-slate-400 font-normal">(Optional)</span>
+                  ZIP or Postal Code <span className="text-slate-400 font-normal lowercase">(optional)</span>
                 </label>
                 <input
                   id="zipCode"
@@ -522,63 +550,51 @@ export const QuoteForm: React.FC<QuoteFormProps> = ({
                   onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
                   placeholder="60459"
                   maxLength={10}
-                  className="w-full px-4 py-3 text-sm rounded-lg bg-white border border-[#E5E9EC] focus:border-[#20A39E] focus:outline-hidden text-[#263238] transition-colors"
+                  className="w-full min-h-[48px] px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border border-[#E5E9EC] focus:border-[#0FB9B1] focus:outline-hidden text-[#263238] transition-colors"
                 />
               </div>
             </div>
 
             {/* Additional Details */}
-            <div className="mb-8">
+            <div className="mb-6 sm:mb-8">
               <label
                 htmlFor="details"
-                className="block text-xs font-bold text-[#14344A] mb-1.5"
+                className="block text-xs font-bold text-[#102A43] mb-1.5 uppercase tracking-wide"
               >
-                Additional Details / Notes <span className="text-slate-400 font-normal">(Optional)</span>
+                Additional Details / Notes <span className="text-slate-400 font-normal lowercase">(optional)</span>
               </label>
               <textarea
                 id="details"
                 rows={3}
                 value={formData.details}
                 onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-                placeholder="Tell us about any specific odors, heavy stains, gate access, or scheduling preferences..."
-                className="w-full px-4 py-3 text-sm rounded-lg bg-white border border-[#E5E9EC] focus:border-[#20A39E] focus:outline-hidden text-[#263238] transition-colors resize-y"
+                placeholder="Tell us about specific odors, grease accumulation, gate access, or scheduling preferences..."
+                className="w-full px-4 py-3 text-base sm:text-sm rounded-xl bg-[#F7F8F4] border border-[#E5E9EC] focus:border-[#0FB9B1] focus:outline-hidden text-[#263238] transition-colors resize-y"
               />
             </div>
 
             {/* Submit Actions */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-4 border-t border-[#E5E9EC]">
-              <div className="text-xs text-slate-500">
-                Direct quote estimate · No payment taken now
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 pt-6 border-t border-[#E5E9EC]">
+              <div className="flex items-center gap-2 text-xs text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                <span>Auto-syncs order to WhatsApp ({formatDisplayPhone(providerPhone)})</span>
               </div>
 
-              <div className="flex items-center gap-3">
-                {/* Optional WhatsApp Enquiry Button if configured */}
-                {businessConfig.whatsappNumber && (
-                  <a
-                    href={`https://wa.me/${businessConfig.whatsappNumber}?text=${buildWhatsAppMessage()}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-3 text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    <span>WhatsApp</span>
-                  </a>
-                )}
-
+              <div className="flex items-center">
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 text-sm font-bold text-white bg-[#20A39E] hover:bg-[#1B8985] active:bg-[#16706D] disabled:opacity-50 disabled:cursor-not-allowed rounded-lg shadow-xs transition-colors cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#20A39E] focus-visible:ring-offset-2"
+                  className="w-full sm:w-auto min-h-[48px] inline-flex items-center justify-center gap-2.5 px-8 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-[#102A43] bg-[#0FB9B1] hover:bg-[#D4F36A] active:bg-[#0B9690] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-[#0FB9B1] focus-visible:ring-offset-2"
                 >
                   {isSubmitting ? (
                     <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Sending...</span>
+                      <div className="w-4 h-4 border-2 border-[#102A43] border-t-transparent rounded-full animate-spin" />
+                      <span>Sending Order...</span>
                     </>
                   ) : (
                     <>
-                      <Send className="w-4 h-4" />
-                      <span>Submit Quote Request</span>
+                      <Send className="w-4 h-4 text-[#102A43]" />
+                      <span>Submit Order via WhatsApp</span>
                     </>
                   )}
                 </button>

@@ -14,68 +14,73 @@ export const Footer: React.FC<FooterProps> = ({
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-[#0F2839] text-white/90 border-t border-[#14344A]">
+    <footer className="bg-[#102A43] text-white/90 border-t border-[#163B5C]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-8">
           {/* Brand Info */}
           <div className="lg:col-span-5">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3.5 mb-4">
               <img
                 src={businessConfig.logoUrl}
                 alt={businessConfig.businessName}
-                className="w-10 h-10 object-contain rounded-full bg-[#14344A] p-0.5 border border-[#20A39E]/50"
+                className="w-12 h-12 object-contain rounded-full bg-[#163B5C] p-0.5 border-2 border-[#0FB9B1]/60 shadow-xs"
               />
-              <span className="text-xl font-bold tracking-tight text-white">
-                {businessConfig.businessName}
-              </span>
+              <div>
+                <span className="text-xl font-extrabold tracking-tight text-white block">
+                  {businessConfig.businessName}
+                </span>
+                <span className="text-xs text-[#0FB9B1] font-medium">
+                  Trash Can & Property Cleaning
+                </span>
+              </div>
             </div>
-            <p className="text-sm text-white/75 leading-relaxed max-w-sm mb-6">
-              Specialized high-temperature trash can sanitization and residential cleaning services. Keeping properties hygienic, odor-free, and welcoming.
+            <p className="text-sm text-slate-300 leading-relaxed max-w-sm mb-6">
+              Specialized high-temperature trash can sanitization and property cleaning services. Keeping homes hygienic, odor-free, and welcoming.
             </p>
-            <div className="flex items-center gap-2 text-xs text-white/60">
-              <MapPin className="w-4 h-4 text-[#20A39E] shrink-0" />
+            <div className="flex items-center gap-2 text-xs text-slate-400">
+              <MapPin className="w-4 h-4 text-[#0FB9B1] shrink-0" />
               <span>{businessConfig.serviceArea}</span>
             </div>
           </div>
 
           {/* Quick Links */}
           <div className="lg:col-span-3">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#20A39E] mb-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#0FB9B1] mb-4">
               Navigation
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <a href="#services" className="hover:text-white transition-colors">
+                <a href="#services" className="hover:text-[#0FB9B1] transition-colors">
                   Services
                 </a>
               </li>
               <li>
-                <a href="#about" className="hover:text-white transition-colors">
+                <a href="#about" className="hover:text-[#0FB9B1] transition-colors">
                   About Us
                 </a>
               </li>
               <li>
-                <a href="#how-it-works" className="hover:text-white transition-colors">
+                <a href="#how-it-works" className="hover:text-[#0FB9B1] transition-colors">
                   How It Works
                 </a>
               </li>
               <li>
-                <a href="#gallery" className="hover:text-white transition-colors">
-                  Visual Gallery
+                <a href="#gallery" className="hover:text-[#0FB9B1] transition-colors">
+                  Results Gallery
                 </a>
               </li>
               <li>
-                <a href="#service-area" className="hover:text-white transition-colors">
+                <a href="#service-area" className="hover:text-[#0FB9B1] transition-colors">
                   Service Area
                 </a>
               </li>
               <li>
-                <a href="#faq" className="hover:text-white transition-colors">
+                <a href="#faq" className="hover:text-[#0FB9B1] transition-colors">
                   FAQ
                 </a>
               </li>
               <li>
-                <a href="#contact" className="hover:text-white transition-colors">
+                <a href="#contact" className="hover:text-[#0FB9B1] transition-colors">
                   Request a Quote
                 </a>
               </li>
@@ -84,7 +89,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Confirmed Channels */}
           <div className="lg:col-span-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-[#20A39E] mb-4">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-[#0FB9B1] mb-4">
               Connect With Us
             </h4>
             <div className="space-y-3 text-sm">
@@ -93,16 +98,16 @@ export const Footer: React.FC<FooterProps> = ({
                 href={businessConfig.instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
+                className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors group"
               >
-                <div className="w-8 h-8 rounded-md bg-[#20A39E]/20 text-[#20A39E] flex items-center justify-center shrink-0">
-                  <Instagram className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-lg bg-[#0FB9B1]/20 text-[#0FB9B1] flex items-center justify-center shrink-0">
+                  <Instagram className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-white group-hover:text-[#20A39E] transition-colors">
+                  <div className="text-xs font-bold text-white group-hover:text-[#0FB9B1] transition-colors">
                     Instagram Profile
                   </div>
-                  <div className="text-[11px] text-white/60">
+                  <div className="text-[11px] text-slate-300">
                     {businessConfig.instagramHandle}
                   </div>
                 </div>
@@ -112,9 +117,9 @@ export const Footer: React.FC<FooterProps> = ({
               {businessConfig.phone && (
                 <a
                   href={`tel:${businessConfig.phone}`}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                  className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
                 >
-                  <Phone className="w-4 h-4 text-[#20A39E]" />
+                  <Phone className="w-4 h-4 text-[#0FB9B1]" />
                   <span>{businessConfig.phone}</span>
                 </a>
               )}
@@ -123,9 +128,9 @@ export const Footer: React.FC<FooterProps> = ({
               {businessConfig.email && (
                 <a
                   href={`mailto:${businessConfig.email}`}
-                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                  className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
                 >
-                  <Mail className="w-4 h-4 text-[#20A39E]" />
+                  <Mail className="w-4 h-4 text-[#0FB9B1]" />
                   <span>{businessConfig.email}</span>
                 </a>
               )}
@@ -136,9 +141,9 @@ export const Footer: React.FC<FooterProps> = ({
                   href={`https://wa.me/${businessConfig.whatsappNumber}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+                  className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
                 >
-                  <MessageCircle className="w-4 h-4 text-[#20A39E]" />
+                  <MessageCircle className="w-4 h-4 text-[#0FB9B1]" />
                   <span>Chat on WhatsApp</span>
                 </a>
               )}
@@ -148,10 +153,10 @@ export const Footer: React.FC<FooterProps> = ({
                 <button
                   type="button"
                   onClick={onOpenOwnerGuide}
-                  className="inline-flex items-center gap-2 text-xs text-white/60 hover:text-white transition-colors cursor-pointer"
+                  className="inline-flex items-center gap-2 text-xs text-slate-400 hover:text-white transition-colors cursor-pointer"
                 >
-                  <Settings className="w-3.5 h-3.5 text-[#20A39E]" />
-                  <span>Owner Configuration Guide</span>
+                  <Settings className="w-3.5 h-3.5 text-[#0FB9B1]" />
+                  <span>Owner Settings & Leads</span>
                 </button>
               </div>
             </div>
@@ -159,7 +164,7 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/60">
+        <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
           <div>
             &copy; {currentYear} {businessConfig.businessName}. All rights reserved. Located in {businessConfig.address}.
           </div>
