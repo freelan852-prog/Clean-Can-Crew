@@ -1,0 +1,6 @@
+{
+  "name": "Clean Can Crew - Professional Cleaning Services",
+  "description": "Professional trash can sanitization and residential cleaning services by Clean Can Crew in Burbank, IL. Get a quick online quote.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
